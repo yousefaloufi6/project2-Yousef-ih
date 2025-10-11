@@ -1,0 +1,25 @@
+
+.stickyFeedbackContainer[data-v-ab5049b1] {
+    position: sticky;
+    bottom: 0px;
+}
+.codicon[data-v-ab5049b1] {
+    line-height: 36px;
+}
+.iconButton[data-v-ab5049b1] {
+    width: 36px;
+    height: 36px;
+    margin: 0.2em;
+    background: transparent;
+    border: none;
+    color: var(--vscode-button-secondaryForeground, #cccccc);
+    opacity: 1.0;
+    padding: 0;
+}
+.iconButtonSelected[data-v-ab5049b1], .iconButton[data-v-ab5049b1]:not(:disabled):hover {
+    background: var(--vscode-button-secondaryHoverBackground, #3c3c3c);
+}
+
+.codicon[data-v-dabbe251] {
+  line-height: 36px;
+}
