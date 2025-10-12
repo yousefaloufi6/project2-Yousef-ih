@@ -5,12 +5,12 @@ resource "azurerm_container_app" "main" {
   revision_mode                = "Single"
   tags                         = var.tags
 
-  # Secrets must be defined BEFORE template
+  # Fixed: Proper secrets configuration
   dynamic "secret" {
-    for_each = var.secrets
+    for_each = { for idx, secret in var.secrets : idx => secret }
     content {
-      name  = secret.key
-      value = secret.value
+      name  = secret.value.name
+      value = secret.value.value
     }
   }
 
@@ -25,7 +25,6 @@ resource "azurerm_container_app" "main" {
       memory = var.memory_requests
 
       dynamic "env" {
-        # ensure an iterable; list is fine
         for_each = var.environment_variables
         content {
           name        = env.value.name
@@ -33,15 +32,20 @@ resource "azurerm_container_app" "main" {
           secret_name = env.value.secret_name
         }
       }
+
+      # Add port configuration
+      ports {
+        port         = var.container_port
+        protocol     = "TCP"
+      }
     }
   }
-
 
   dynamic "ingress" {
     for_each = var.ingress_enabled ? [1] : []
     content {
-      allow_insecure_connections = true   # Allow HTTP for internal Application Gateway communication
-      external_enabled           = true   # Temporarily external to bypass environment limit
+      allow_insecure_connections = true
+      external_enabled           = var.ingress_external
       target_port                = var.container_port
       transport                  = "auto"
       
@@ -50,5 +54,11 @@ resource "azurerm_container_app" "main" {
         latest_revision = true
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image
+    ]
   }
 }
