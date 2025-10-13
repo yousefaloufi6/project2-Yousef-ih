@@ -5,9 +5,8 @@ resource "azurerm_container_app" "main" {
   revision_mode                = "Single"
   tags                         = var.tags
 
-  # Secrets configuration
   dynamic "secret" {
-    for_each = var.secrets
+    for_each = length(var.secrets) > 0 ? [for i, s in var.secrets : merge(s, { index = i })] : []
     content {
       name  = secret.value.name
       value = secret.value.value
