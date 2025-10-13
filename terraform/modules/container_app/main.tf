@@ -6,7 +6,7 @@ resource "azurerm_container_app" "main" {
   tags                         = var.tags
 
   dynamic "secret" {
-    for_each = length(var.secrets) > 0 ? [for i, s in var.secrets : merge(s, { index = i })] : []
+    for_each = { for idx, s in var.secrets : idx => { name = s.name, value = s.value } }
     content {
       name  = secret.value.name
       value = secret.value.value
