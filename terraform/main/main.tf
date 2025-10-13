@@ -88,9 +88,9 @@ module "frontend_container_app" {
   min_replicas          = 1
   max_replicas          = 10
 
-  # اجعلها داخلية فقط
+  # Make external so Application Gateway can reach it
   ingress_enabled  = true
-  ingress_external = false
+  ingress_external = true
 
   # API عبر IP الـ App Gateway (HTTP فقط)
   environment_variables = [
@@ -117,9 +117,9 @@ module "backend_container_app" {
   min_replicas          = 1
   max_replicas          = 10
 
-  # اجعلها داخلية فقط
+  # Make external so Application Gateway can reach it
   ingress_enabled  = true
-  ingress_external = false
+  ingress_external = true
 
   environment_variables = [
     {
