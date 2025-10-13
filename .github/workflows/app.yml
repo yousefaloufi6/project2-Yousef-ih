@@ -201,28 +201,48 @@ jobs:
 
       - name: Update Backend Container App
         run: |
-          az containerapp update \
-            --name ca-backend \
-            --resource-group rg-burgerbuilder-prod \
-            --image "${{ needs.backend-build-push.outputs.image_tag }}"
+          if az containerapp show --name ca-backend --resource-group rg-burgerbuilder-prod &> /dev/null; then
+            echo "Updating backend container app..."
+            az containerapp update \
+              --name ca-backend \
+              --resource-group rg-burgerbuilder-prod \
+              --image "${{ needs.backend-build-push.outputs.image_tag }}"
+          else
+            echo "Backend container app does not exist. Skipping update."
+            echo "Please deploy infrastructure using Terraform first."
+          fi
 
       - name: Update Frontend Container App
         run: |
-          az containerapp update \
-            --name ca-frontend \
-            --resource-group rg-burgerbuilder-prod \
-            --image "${{ needs.frontend-build-push.outputs.image_tag }}"
+          if az containerapp show --name ca-frontend --resource-group rg-burgerbuilder-prod &> /dev/null; then
+            echo "Updating frontend container app..."
+            az containerapp update \
+              --name ca-frontend \
+              --resource-group rg-burgerbuilder-prod \
+              --image "${{ needs.frontend-build-push.outputs.image_tag }}"
+          else
+            echo "Frontend container app does not exist. Skipping update."
+            echo "Please deploy infrastructure using Terraform first."
+          fi
 
       - name: Verify deployments
         run: |
-          echo "Backend deployment status:"
-          az containerapp show \
-            --name ca-backend \
-            --resource-group rg-burgerbuilder-prod \
-            --query "properties.latestRevisionName" -o tsv
+          if az containerapp show --name ca-backend --resource-group rg-burgerbuilder-prod &> /dev/null; then
+            echo "Backend deployment status:"
+            az containerapp show \
+              --name ca-backend \
+              --resource-group rg-burgerbuilder-prod \
+              --query "properties.latestRevisionName" -o tsv
+          else
+            echo "Backend container app not found"
+          fi
           
-          echo "Frontend deployment status:"
-          az containerapp show \
-            --name ca-frontend \
-            --resource-group rg-burgerbuilder-prod \
-            --query "properties.latestRevisionName" -o tsv
+          if az containerapp show --name ca-frontend --resource-group rg-burgerbuilder-prod &> /dev/null; then
+            echo "Frontend deployment status:"
+            az containerapp show \
+              --name ca-frontend \
+              --resource-group rg-burgerbuilder-prod \
+              --query "properties.latestRevisionName" -o tsv
+          else
+            echo "Frontend container app not found"
+          fi
