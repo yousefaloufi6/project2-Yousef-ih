@@ -32,12 +32,6 @@ resource "azurerm_container_app" "main" {
           secret_name = env.value.secret_name
         }
       }
-
-      # Add port configuration
-      ports {
-        port         = var.container_port
-        protocol     = "TCP"
-      }
     }
   }
 
