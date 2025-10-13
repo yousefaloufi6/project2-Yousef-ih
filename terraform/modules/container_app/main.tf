@@ -1,3 +1,7 @@
+locals {
+  secrets_map = { for idx, s in var.secrets : tostring(idx) => s }
+}
+
 resource "azurerm_container_app" "main" {
   name                         = "ca-${var.name}"
   container_app_environment_id = var.container_apps_env_id
@@ -7,10 +11,10 @@ resource "azurerm_container_app" "main" {
 
   # Secrets configuration
   dynamic "secret" {
-    for_each = toset([for idx in range(length(var.secrets)) : tostring(idx)])
+    for_each = local.secrets_map
     content {
-      name  = var.secrets[tonumber(secret.value)].name
-      value = var.secrets[tonumber(secret.value)].value
+      name  = secret.value.name
+      value = secret.value.value
     }
   }
 
