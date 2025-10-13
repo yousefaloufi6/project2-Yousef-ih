@@ -5,9 +5,9 @@ resource "azurerm_container_app" "main" {
   revision_mode                = "Single"
   tags                         = var.tags
 
-  # Fixed: Proper secrets configuration
+  # Secrets configuration
   dynamic "secret" {
-    for_each = { for idx, secret in var.secrets : idx => secret }
+    for_each = var.secrets
     content {
       name  = secret.value.name
       value = secret.value.value
