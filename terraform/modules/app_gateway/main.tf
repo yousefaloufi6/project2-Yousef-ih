@@ -106,20 +106,20 @@ resource "azurerm_application_gateway" "main" {
   # URL rewrite for API paths
   rewrite_rule_set {
     name = "api-rewrite"
-    
+
     rewrite_rule {
       name          = "add-api-prefix"
       rule_sequence = 100
-      
+
       condition {
         variable    = "var_uri_path"
         pattern     = "^/api/(.*)$"
         ignore_case = true
       }
-      
+
       url {
-        path         = "/api/{var_uri_path_1}"
-        reroute      = false
+        path    = "/api/{var_uri_path_1}"
+        reroute = false
       }
     }
   }

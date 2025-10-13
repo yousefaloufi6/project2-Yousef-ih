@@ -32,7 +32,7 @@ module "network" {
   vnet_address_space  = var.vnet_address_space
   agw_subnet_cidr     = var.agw_subnet_cidr
   aca_subnet_cidr     = var.aca_subnet_cidr
-  aca_ca_subnet_cidr  = var.aca_ca_subnet_cidr   # ✅ جديد: سبنت بيئة الـ ACA المفوّضة
+  aca_ca_subnet_cidr  = var.aca_ca_subnet_cidr # ✅ جديد: سبنت بيئة الـ ACA المفوّضة
   pe_subnet_cidr      = var.pe_subnet_cidr
   environment         = var.environment
   tags                = var.tags
@@ -70,7 +70,7 @@ module "container_apps_env" {
   resource_group_name        = module.resource_group.name
   location                   = var.location
   log_analytics_workspace_id = module.log_analytics.workspace_id
-  subnet_id                  = module.network.aca_ca_subnet_id   # ✅ بدلًا من aca_subnet_id
+  subnet_id                  = module.network.aca_ca_subnet_id # ✅ بدلًا من aca_subnet_id
   tags                       = var.tags
 }
 
@@ -172,8 +172,8 @@ module "app_gateway" {
   subnet_id           = module.network.agw_subnet_id
 
   # وجّه الـ AGW إلى الـ FQDN الداخلي لكل App
-  frontend_fqdn       = module.frontend_container_app.fqdn
-  backend_fqdn        = module.backend_container_app.fqdn
+  frontend_fqdn = module.frontend_container_app.fqdn
+  backend_fqdn  = module.backend_container_app.fqdn
 
-  tags                = var.tags
+  tags = var.tags
 }

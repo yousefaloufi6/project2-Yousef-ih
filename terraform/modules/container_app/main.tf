@@ -42,7 +42,7 @@ resource "azurerm_container_app" "main" {
       external_enabled           = var.ingress_external
       target_port                = var.container_port
       transport                  = "auto"
-      
+
       traffic_weight {
         percentage      = 100
         latest_revision = true

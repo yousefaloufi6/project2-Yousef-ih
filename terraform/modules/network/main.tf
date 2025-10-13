@@ -97,14 +97,14 @@ resource "azurerm_network_security_group" "agw" {
   }
 
   security_rule {
-    name                       = "AllowToContainerApps"
-    priority                   = 1000
-    direction                  = "Outbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_ranges    = ["80", "8080", "443"]
-    source_address_prefix      = "*"
+    name                    = "AllowToContainerApps"
+    priority                = 1000
+    direction               = "Outbound"
+    access                  = "Allow"
+    protocol                = "Tcp"
+    source_port_range       = "*"
+    destination_port_ranges = ["80", "8080", "443"]
+    source_address_prefix   = "*"
     # نخليها على السابنت القديمة لأن الـ AGW يوجّه داخليًا عبر FQDNs،
     # ولو ودّك تضم الجديدة برضه، خليه VirtualNetwork أحسن:
     destination_address_prefix = "VirtualNetwork"

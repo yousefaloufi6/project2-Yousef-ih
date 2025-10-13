@@ -5,7 +5,7 @@ resource "azurerm_container_app_environment" "main" {
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
   # ربط الـ ACA Environment على سبنت مفوض لـ Microsoft.App/environments
-  infrastructure_subnet_id       = var.subnet_id
+  infrastructure_subnet_id = var.subnet_id
 
   # اختياري لكنه أنظف مع App Gateway: يجعل الـ Environment داخلية فقط (ILB)
   internal_load_balancer_enabled = true
@@ -21,5 +21,5 @@ resource "azurerm_monitor_diagnostic_setting" "aca_env" {
 
   enabled_log { category = "ContainerAppConsoleLogs" }
   enabled_log { category = "ContainerAppSystemLogs" }
-  metric      { category = "AllMetrics" }
+  metric { category = "AllMetrics" }
 }
