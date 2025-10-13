@@ -29,7 +29,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'eclipse-temurin'
+          distribution: 'temurin'
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -60,7 +60,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'eclipse-temurin'
+          distribution: 'temurin'
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -123,7 +123,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./frontend
-        run: npm run test:ci
+        run: npm run test -- --run
 
       - name: Run lint
         working-directory: ./frontend
