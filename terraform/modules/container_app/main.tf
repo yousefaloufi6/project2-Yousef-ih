@@ -5,14 +5,6 @@ resource "azurerm_container_app" "main" {
   revision_mode                = "Single"
   tags                         = var.tags
 
-  dynamic "secret" {
-    for_each = { for idx, s in var.secrets : idx => { name = s.name, value = s.value } }
-    content {
-      name  = secret.value.name
-      value = secret.value.value
-    }
-  }
-
   template {
     min_replicas = var.min_replicas
     max_replicas = var.max_replicas

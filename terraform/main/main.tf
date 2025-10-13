@@ -139,8 +139,8 @@ module "backend_container_app" {
       value = var.sql_admin_login
     },
     {
-      name        = "DB_PASSWORD"
-      secret_name = "sql-password"
+      name  = "DB_PASSWORD"
+      value = random_password.sql_admin_password.result
     },
     {
       name  = "DB_DRIVER"
@@ -149,13 +149,6 @@ module "backend_container_app" {
     {
       name  = "SPRING_PROFILES_ACTIVE"
       value = "azure"
-    }
-  ]
-
-  secrets = [
-    {
-      name  = "sql-password"
-      value = random_password.sql_admin_password.result
     }
   ]
 
