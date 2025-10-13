@@ -5,15 +5,12 @@ resource "azurerm_container_app" "main" {
   revision_mode                = "Single"
   tags                         = var.tags
 
-  # Secrets configuration - using simple map
+  # Secrets configuration
   dynamic "secret" {
-    for_each = zipmap(
-      [for s in var.secrets : s.name],
-      [for s in var.secrets : s.value]
-    )
+    for_each = var.secrets
     content {
-      name  = secret.key
-      value = secret.value
+      name  = secret.value.name
+      value = secret.value.value
     }
   }
 
