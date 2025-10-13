@@ -12,7 +12,7 @@ pe_subnet_cidr     = "10.2.4.0/24"
 aca_ca_subnet_cidr = "10.2.6.0/23"
 
 # Resource Names
-aca_environment_name         = "yousef-aca-env-prod-v1"
+aca_environment_name         = "yousef-aca-env-prod-v2"
 app_gateway_name             = "agw-yousef-burgerbuilder"
 log_analytics_workspace_name = "law-yousef-burgerbuilder"
 
