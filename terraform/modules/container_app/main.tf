@@ -7,10 +7,11 @@ resource "azurerm_container_app" "main" {
 
   # Secrets configuration
   dynamic "secret" {
-    for_each = { for idx, s in var.secrets : s.name => s }
+    for_each = var.secrets
+    iterator = secret_item
     content {
-      name  = secret.value.name
-      value = secret.value.value
+      name  = secret_item.value.name
+      value = secret_item.value.value
     }
   }
 
