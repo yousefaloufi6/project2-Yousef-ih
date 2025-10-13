@@ -7,10 +7,10 @@ resource "azurerm_container_app" "main" {
 
   # Secrets configuration
   dynamic "secret" {
-    for_each = toset([for s in var.secrets : s.name])
+    for_each = range(length(var.secrets))
     content {
-      name  = secret.value
-      value = [for s in var.secrets : s.value if s.name == secret.value][0]
+      name  = var.secrets[secret.value].name
+      value = var.secrets[secret.value].value
     }
   }
 
