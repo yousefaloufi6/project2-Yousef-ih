@@ -179,6 +179,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            VITE_API_BASE_URL=http://172.171.116.40
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

@@ -12,8 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Set API base URL for production (Yousef-v5 Application Gateway)
-ENV VITE_API_BASE_URL=http://40.125.80.34
+# Accept API base URL as build argument
+ARG VITE_API_BASE_URL=http://172.171.116.40
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 # Build the application
 RUN npm run build
