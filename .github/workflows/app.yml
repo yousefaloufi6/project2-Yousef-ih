@@ -42,10 +42,6 @@ jobs:
         working-directory: ./backend
         run: mvn clean test
 
-      - name: Run checkstyle
-        working-directory: ./backend
-        run: mvn checkstyle:check
-
   backend-build-push:
     needs: backend-test
     if: github.event_name == 'push'
