@@ -1,5 +1,5 @@
 locals {
-  secrets_map = { for idx, s in var.secrets : tostring(idx) => s }
+  secrets_map = length(var.secrets) > 0 ? { for s in var.secrets : s.name => s } : {}
 }
 
 resource "azurerm_container_app" "main" {
@@ -13,7 +13,7 @@ resource "azurerm_container_app" "main" {
   dynamic "secret" {
     for_each = local.secrets_map
     content {
-      name  = secret.value.name
+      name  = secret.key
       value = secret.value.value
     }
   }
