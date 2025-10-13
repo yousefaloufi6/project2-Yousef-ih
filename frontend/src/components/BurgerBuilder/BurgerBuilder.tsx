@@ -25,6 +25,7 @@ const BurgerBuilder: React.FC = () => {
 
   useEffect(() => {
     loadIngredients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadIngredients = async () => {
