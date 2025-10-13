@@ -15,7 +15,7 @@ const mockAxiosInstance = {
 };
 
 // Setup axios.create to return our mock instance
-mockedAxios.create.mockReturnValue(mockAxiosInstance as any);
+mockedAxios.create.mockReturnValue(mockAxiosInstance as unknown as typeof axios);
 
 // Import after mocking
 const {

@@ -90,3 +90,4 @@ export const useBurgerBuilder = (): BurgerBuilderContextType => {
   return context;
 };
 
+export default BurgerBuilderProvider;
