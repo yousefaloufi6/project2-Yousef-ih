@@ -1,6 +1,6 @@
 # أساسيات
-prefix              = "yousef-v5"
-resource_group_name = "Yousef-v5-rg"
+prefix              = "yousef"
+resource_group_name = "Yousef-rg"
 location            = "westus2"
 environment         = "prod"
 
@@ -12,14 +12,14 @@ pe_subnet_cidr     = "10.2.4.0/24"
 aca_ca_subnet_cidr = "10.2.6.0/23"
 
 # Resource Names
-aca_environment_name         = "yousef-v5-aca-env-prod"
-app_gateway_name             = "agw-yousef-v5-burgerbuilder"
-log_analytics_workspace_name = "law-yousef-v5-burgerbuilder"
+aca_environment_name         = "yousef-aca-env-prod-v1"
+app_gateway_name             = "agw-yousef-burgerbuilder"
+log_analytics_workspace_name = "law-yousef-burgerbuilder"
 
 # SQL Configuration
-sql_server_name   = "sql-yousef-v5-burgerbuilder"
-sql_database_name = "sqldb-yousef-v5-burgerbuilder"
-sql_admin_login   = "yousefv5-admin"
+sql_server_name   = "sql-yousef-burgerbuilder"
+sql_database_name = "sqldb-yousef-burgerbuilder"
+sql_admin_login   = "yousef-admin"
 
 # Docker Hub
 dockerhub_org  = "youkim7"
@@ -32,6 +32,6 @@ api_image_tag = "yousef-v6-final"
 # Tags
 tags = {
   Environment = "Production"
-  Project     = "Yousef-v5-BurgerBuilder"
-  Owner       = "Yousef-v5"
+  Project     = "Yousef-BurgerBuilder"
+  Owner       = "Yousef"
 }
