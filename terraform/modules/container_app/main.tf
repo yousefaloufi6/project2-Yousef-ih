@@ -1,7 +1,3 @@
-locals {
-  secrets_map = length(var.secrets) > 0 ? { for s in var.secrets : s.name => s } : {}
-}
-
 resource "azurerm_container_app" "main" {
   name                         = "ca-${var.name}"
   container_app_environment_id = var.container_apps_env_id
@@ -9,12 +5,15 @@ resource "azurerm_container_app" "main" {
   revision_mode                = "Single"
   tags                         = var.tags
 
-  # Secrets configuration
+  # Secrets configuration - using simple map
   dynamic "secret" {
-    for_each = local.secrets_map
+    for_each = zipmap(
+      [for s in var.secrets : s.name],
+      [for s in var.secrets : s.value]
+    )
     content {
       name  = secret.key
-      value = secret.value.value
+      value = secret.value
     }
   }
 
