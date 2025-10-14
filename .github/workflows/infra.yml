@@ -177,24 +177,42 @@ jobs:
       - name: Terraform Init
         run: terraform init -backend-config=../backend.hcl -reconfigure -input=false
 
-      - name: Clean up corrupted state and resources
+      - name: Auto-import existing resources if not in state
         continue-on-error: true
         run: |
-          # Remove any corrupted resources from state
-          terraform state rm 'module.container_apps_env.azurerm_container_app_environment.main' || true
-          terraform state rm 'module.container_app_frontend.azurerm_container_app.main' || true
-          terraform state rm 'module.container_app_backend.azurerm_container_app.main' || true
+          echo "Checking if resources need to be imported..."
           
-          # Delete ALL existing Container Apps Environments (they will be recreated cleanly)
-          echo "Deleting all Container Apps Environments in Yousef-rg..."
-          for env_name in $(az containerapp env list --resource-group Yousef-rg --query "[].name" -o tsv); do
-            echo "Deleting environment: $env_name"
-            az containerapp env delete --name "$env_name" --resource-group Yousef-rg --yes --no-wait || true
-          done
+          # Check if Container Apps Environment exists in Azure but not in state
+          if az containerapp env show --name yousef-aca-env-prod-v2 --resource-group Yousef-rg &>/dev/null; then
+            echo "Container Apps Environment exists in Azure..."
+            if ! terraform state show 'module.container_apps_env.azurerm_container_app_environment.main' &>/dev/null; then
+              echo "Not in Terraform state - importing..."
+              terraform import 'module.container_apps_env.azurerm_container_app_environment.main' \
+                "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/managedEnvironments/yousef-aca-env-prod-v2" || true
+            else
+              echo "Already in Terraform state - skipping"
+            fi
+          fi
           
-          # Wait for deletions to start
-          echo "Waiting 30 seconds for environment deletions to start..."
-          sleep 30
+          # Check if frontend Container App needs importing
+          if az containerapp show --name ca-frontend --resource-group Yousef-rg &>/dev/null; then
+            if ! terraform state show 'module.frontend_container_app.azurerm_container_app.main' &>/dev/null; then
+              echo "Importing frontend container app..."
+              terraform import 'module.frontend_container_app.azurerm_container_app.main' \
+                "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/containerApps/ca-frontend" || true
+            fi
+          fi
+          
+          # Check if backend Container App needs importing
+          if az containerapp show --name ca-backend --resource-group Yousef-rg &>/dev/null; then
+            if ! terraform state show 'module.backend_container_app.azurerm_container_app.main' &>/dev/null; then
+              echo "Importing backend container app..."
+              terraform import 'module.backend_container_app.azurerm_container_app.main' \
+                "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/containerApps/ca-backend" || true
+            fi
+          fi
+          
+          echo "Import check complete!"
 
       - name: Download plan artifact
         if: github.event_name == 'push'
