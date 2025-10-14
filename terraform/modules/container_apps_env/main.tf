@@ -7,8 +7,8 @@ resource "azurerm_container_app_environment" "main" {
   # ربط الـ ACA Environment على سبنت مفوض لـ Microsoft.App/environments
   infrastructure_subnet_id = var.subnet_id
 
-  # اختياري لكنه أنظف مع App Gateway: يجعل الـ Environment داخلية فقط (ILB)
-  internal_load_balancer_enabled = true
+  # Set to false so external Container Apps can be publicly accessible
+  internal_load_balancer_enabled = false
 
   tags = var.tags
 }
