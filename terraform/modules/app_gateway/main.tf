@@ -102,12 +102,12 @@ resource "azurerm_application_gateway" "main" {
     protocol                       = "Http"
   }
 
-  # URL rewrite for API paths
+  # URL rewrite for API paths - Remove /api prefix before sending to backend
   rewrite_rule_set {
     name = "api-rewrite"
 
     rewrite_rule {
-      name          = "add-api-prefix"
+      name          = "remove-api-prefix"
       rule_sequence = 100
 
       condition {
@@ -117,7 +117,7 @@ resource "azurerm_application_gateway" "main" {
       }
 
       url {
-        path    = "/api/{var_uri_path_1}"
+        path    = "/{var_uri_path_1}"
         reroute = false
       }
     }
