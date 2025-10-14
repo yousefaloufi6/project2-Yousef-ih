@@ -38,13 +38,17 @@ module "network" {
   tags                = var.tags
 }
 
-# Private DNS Zones
+# Private DNS Zones (depends on Container Apps Environment for domain and static IP)
 module "dns" {
   source = "../modules/dns"
 
-  resource_group_name = module.resource_group.name
-  vnet_id             = module.network.vnet_id
-  tags                = var.tags
+  resource_group_name                = module.resource_group.name
+  vnet_id                            = module.network.vnet_id
+  container_apps_environment_domain  = module.container_apps_env.default_domain
+  container_apps_static_ip           = module.container_apps_env.static_ip
+  tags                               = var.tags
+
+  depends_on = [module.container_apps_env]
 }
 
 # SQL Server with Private Endpoint
