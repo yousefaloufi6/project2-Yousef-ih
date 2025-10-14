@@ -13,6 +13,14 @@ resource "azurerm_container_app_environment" "main" {
   tags = var.tags
 }
 
+# Data source to get environment properties after creation
+data "azurerm_container_app_environment" "main" {
+  name                = azurerm_container_app_environment.main.name
+  resource_group_name = azurerm_container_app_environment.main.resource_group_name
+
+  depends_on = [azurerm_container_app_environment.main]
+}
+
 # Diagnostic settings for Container Apps Environment
 resource "azurerm_monitor_diagnostic_setting" "aca_env" {
   name                       = "diag-${var.name}"
