@@ -177,6 +177,20 @@ jobs:
       - name: Terraform Init
         run: terraform init -backend-config=../backend.hcl -reconfigure -input=false
 
+      - name: Import existing resources if needed
+        continue-on-error: true
+        run: |
+          # Import Container Apps Environment if it exists but not in state
+          terraform import 'module.container_apps_env.azurerm_container_app_environment.main' \
+            "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/managedEnvironments/yousef-aca-env-prod-v2" || true
+          
+          # Import Container Apps if they exist but not in state
+          terraform import 'module.container_app_frontend.azurerm_container_app.main' \
+            "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/containerApps/ca-frontend" || true
+          
+          terraform import 'module.container_app_backend.azurerm_container_app.main' \
+            "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/containerApps/ca-backend" || true
+
       - name: Download plan artifact
         if: github.event_name == 'push'
         uses: actions/download-artifact@v4
