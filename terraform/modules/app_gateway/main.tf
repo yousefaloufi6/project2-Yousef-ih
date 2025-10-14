@@ -48,50 +48,47 @@ resource "azurerm_application_gateway" "main" {
     fqdns = [var.backend_fqdn]
   }
 
-  # Probes (HTTP)
-  # Health probe for frontend (nginx on port 80)
+  # Health probes for external Container Apps (HTTPS)
+  # Health probe for frontend (nginx on port 443 HTTPS)
   probe {
     name                                      = "frontend-probe"
-    protocol                                  = "Http"
+    protocol                                  = "Https"
     path                                      = "/"
     interval                                  = 30
     timeout                                   = 60
     unhealthy_threshold                       = 5
     pick_host_name_from_backend_http_settings = true
-    port                                      = 80
     match { status_code = ["200-499"] }
   }
 
-  # Health probe for backend (Spring Boot on port 8080)
+  # Health probe for backend (Spring Boot on port 443 HTTPS)
   probe {
     name                                      = "backend-probe"
-    protocol                                  = "Http"
+    protocol                                  = "Https"
     path                                      = "/actuator/health"
     interval                                  = 30
     timeout                                   = 30
     unhealthy_threshold                       = 3
     pick_host_name_from_backend_http_settings = true
-    port                                      = 8080
     match { status_code = ["200-299"] }
   }
 
-  # HTTP settings to Container Apps (HTTP)
+  # Backend HTTP settings for external Container Apps (HTTPS)
   backend_http_settings {
     name                                = "frontend-http-settings"
     cookie_based_affinity               = "Disabled"
-    port                                = 80
-    protocol                            = "Http"
+    port                                = 443
+    protocol                            = "Https"
     request_timeout                     = 60
-    pick_host_name_from_backend_address = false
-    host_name                           = var.frontend_fqdn
+    pick_host_name_from_backend_address = true
     probe_name                          = "frontend-probe"
   }
 
   backend_http_settings {
     name                                = "backend-http-settings"
     cookie_based_affinity               = "Disabled"
-    port                                = 8080
-    protocol                            = "Http"
+    port                                = 443
+    protocol                            = "Https"
     request_timeout                     = 60
     pick_host_name_from_backend_address = true
     probe_name                          = "backend-probe"
