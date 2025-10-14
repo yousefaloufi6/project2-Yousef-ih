@@ -185,11 +185,15 @@ jobs:
           terraform state rm 'module.container_app_frontend.azurerm_container_app.main' || true
           terraform state rm 'module.container_app_backend.azurerm_container_app.main' || true
           
-          # Delete existing Container Apps Environment if it exists (it will be recreated cleanly)
-          az containerapp env delete --name yousef-aca-env-prod-v2 --resource-group Yousef-rg --yes --no-wait || true
+          # Delete ALL existing Container Apps Environments (they will be recreated cleanly)
+          echo "Deleting all Container Apps Environments in Yousef-rg..."
+          for env_name in $(az containerapp env list --resource-group Yousef-rg --query "[].name" -o tsv); do
+            echo "Deleting environment: $env_name"
+            az containerapp env delete --name "$env_name" --resource-group Yousef-rg --yes --no-wait || true
+          done
           
-          # Wait a bit for deletion to start
-          echo "Waiting for environment deletion to start..."
+          # Wait for deletions to start
+          echo "Waiting 30 seconds for environment deletions to start..."
           sleep 30
 
       - name: Download plan artifact
@@ -270,12 +274,15 @@ jobs:
           echo "Waiting 30 seconds for container apps to delete..."
           sleep 30
           
-          # Delete Container Apps Environment (this will clean up AKS resources)
-          echo "Deleting Container Apps Environment..."
-          az containerapp env delete --name yousef-aca-env-prod-v2 --resource-group Yousef-rg --yes || true
+          # Delete ALL Container Apps Environments (this will clean up AKS resources)
+          echo "Deleting ALL Container Apps Environments..."
+          for env_name in $(az containerapp env list --resource-group Yousef-rg --query "[].name" -o tsv); do
+            echo "Deleting environment: $env_name"
+            az containerapp env delete --name "$env_name" --resource-group Yousef-rg --yes || true
+          done
           
-          # Wait for environment to delete (this is critical!)
-          echo "Waiting 120 seconds for environment and AKS resources to fully delete..."
+          # Wait for environments to delete (this is critical!)
+          echo "Waiting 120 seconds for environments and AKS resources to fully delete..."
           sleep 120
           
           echo "=== Pre-destroy cleanup complete ==="
