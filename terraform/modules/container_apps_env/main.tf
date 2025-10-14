@@ -11,6 +11,13 @@ resource "azurerm_container_app_environment" "main" {
   internal_load_balancer_enabled = true
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      # Prevent recreation - domain is randomly generated and breaking it causes DNS issues
+      # Only create this resource manually or on first apply
+    ]
+  }
 }
 
 # Diagnostic settings for Container Apps Environment

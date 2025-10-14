@@ -107,7 +107,7 @@ resource "azurerm_application_gateway" "main" {
     name = "api-rewrite"
 
     rewrite_rule {
-      name          = "remove-api-prefix"
+      name          = "keep-api-prefix"
       rule_sequence = 100
 
       condition {
@@ -117,7 +117,7 @@ resource "azurerm_application_gateway" "main" {
       }
 
       url {
-        path    = "/{var_uri_path_1}"
+        path    = "/api/{var_uri_path_1}"
         reroute = false
       }
     }
