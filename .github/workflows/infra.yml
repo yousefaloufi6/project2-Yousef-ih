@@ -216,3 +216,59 @@ jobs:
           name: terraform-outputs
           path: terraform/main/outputs.json
           retention-days: 30
+
+  terraform-destroy:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    environment:
+      name: production
+    defaults:
+      run:
+        working-directory: terraform/main
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            }
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.9.8'
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: terraform init -backend-config=../backend.hcl -reconfigure -input=false
+
+      - name: Clean up any corrupted state
+        continue-on-error: true
+        run: |
+          # Remove corrupted resources from state
+          terraform state rm 'module.container_apps_env.azurerm_container_app_environment.main' || true
+          terraform state rm 'module.container_app_frontend.azurerm_container_app.main' || true
+          terraform state rm 'module.container_app_backend.azurerm_container_app.main' || true
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+
+      - name: Manual cleanup of stuck resources
+        continue-on-error: true
+        run: |
+          echo "Cleaning up any remaining Container Apps resources..."
+          az containerapp delete --name ca-frontend --resource-group Yousef-rg --yes --no-wait || true
+          az containerapp delete --name ca-backend --resource-group Yousef-rg --yes --no-wait || true
+          az containerapp env delete --name yousef-aca-env-prod-v2 --resource-group Yousef-rg --yes --no-wait || true
+          echo "Cleanup commands issued. Resources will be deleted in the background."
