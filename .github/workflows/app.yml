@@ -14,8 +14,8 @@ on:
   workflow_dispatch:
 
 env:
-  BACKEND_DOCKER_REPO: docker.io/youkim7/backend
-  FRONTEND_DOCKER_REPO: docker.io/youkim7/frontend
+  BACKEND_DOCKER_REPO: docker.io/yousefaloufi6/burgerbuilder-backend
+  FRONTEND_DOCKER_REPO: docker.io/yousefaloufi6/burgerbuilder-frontend
 
 jobs:
   # Backend Jobs
@@ -149,7 +149,7 @@ jobs:
       - name: Build application
         working-directory: ./frontend
         env:
-          VITE_API_BASE_URL: ${{ secrets.FE_API_BASE_URL }}
+          VITE_API_BASE_URL: http://4.197.160.254
         run: npm run build
 
       - name: Set up Docker Buildx
@@ -180,7 +180,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
-            VITE_API_BASE_URL=http://172.171.116.40
+            VITE_API_BASE_URL=http://4.197.160.254
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -193,21 +193,15 @@ jobs:
       - name: Azure CLI login
         uses: azure/login@v2
         with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-            }
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Update Backend Container App
         run: |
-          if az containerapp show --name ca-backend --resource-group Yousef-rg &> /dev/null; then
+          if az containerapp show --name ca-backend-aloufi --resource-group aloufiyousef-rg &> /dev/null; then
             echo "Updating backend container app..."
             az containerapp update \
-              --name ca-backend \
-              --resource-group Yousef-rg \
+              --name ca-backend-aloufi \
+              --resource-group aloufiyousef-rg \
               --image "${{ needs.backend-build-push.outputs.image_tag }}"
           else
             echo "Backend container app does not exist. Skipping update."
@@ -216,11 +210,11 @@ jobs:
 
       - name: Update Frontend Container App
         run: |
-          if az containerapp show --name ca-frontend --resource-group Yousef-rg &> /dev/null; then
+          if az containerapp show --name ca-frontend-aloufi --resource-group aloufiyousef-rg &> /dev/null; then
             echo "Updating frontend container app..."
             az containerapp update \
-              --name ca-frontend \
-              --resource-group Yousef-rg \
+              --name ca-frontend-aloufi \
+              --resource-group aloufiyousef-rg \
               --image "${{ needs.frontend-build-push.outputs.image_tag }}"
           else
             echo "Frontend container app does not exist. Skipping update."
@@ -229,21 +223,21 @@ jobs:
 
       - name: Verify deployments
         run: |
-          if az containerapp show --name ca-backend --resource-group Yousef-rg &> /dev/null; then
+          if az containerapp show --name ca-backend-aloufi --resource-group aloufiyousef-rg &> /dev/null; then
             echo "Backend deployment status:"
             az containerapp show \
-              --name ca-backend \
-              --resource-group Yousef-rg \
+              --name ca-backend-aloufi \
+              --resource-group aloufiyousef-rg \
               --query "properties.latestRevisionName" -o tsv
           else
             echo "Backend container app not found"
           fi
           
-          if az containerapp show --name ca-frontend --resource-group Yousef-rg &> /dev/null; then
+          if az containerapp show --name ca-frontend-aloufi --resource-group aloufiyousef-rg &> /dev/null; then
             echo "Frontend deployment status:"
             az containerapp show \
-              --name ca-frontend \
-              --resource-group Yousef-rg \
+              --name ca-frontend-aloufi \
+              --resource-group aloufiyousef-rg \
               --query "properties.latestRevisionName" -o tsv
           else
             echo "Frontend container app not found"

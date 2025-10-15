@@ -1,7 +1,6 @@
-# Generate random password for SQL Server
-resource "random_password" "sql_admin_password" {
-  length  = 20
-  special = true
+# SQL Admin Password - Using fixed password
+locals {
+  sql_admin_password = "P@ssword1234!"
 }
 
 # Resource Group
@@ -54,7 +53,7 @@ module "sql" {
   server_name         = var.sql_server_name
   database_name       = var.sql_database_name
   admin_login         = var.sql_admin_login
-  admin_password      = random_password.sql_admin_password.result
+  admin_password      = local.sql_admin_password
   resource_group_name = module.resource_group.name
   location            = var.location
   pe_subnet_id        = module.network.pe_subnet_id
@@ -78,10 +77,10 @@ module "container_apps_env" {
 module "frontend_container_app" {
   source = "../modules/container_app"
 
-  name                  = "frontend"
+  name                  = "frontend-aloufi"
   container_apps_env_id = module.container_apps_env.id
   resource_group_name   = module.resource_group.name
-  container_image       = "docker.io/${var.dockerhub_org}/frontend:${var.fe_image_tag}"
+  container_image       = "docker.io/${var.dockerhub_org}/burgerbuilder-frontend:${var.fe_image_tag}"
   container_port        = 80
   cpu_requests          = "0.25"
   memory_requests       = "0.5Gi"
@@ -91,6 +90,11 @@ module "frontend_container_app" {
   # Make external so Application Gateway can reach it
   ingress_enabled  = true
   ingress_external = true
+
+  # Docker registry authentication
+  registry_server   = "docker.io"
+  registry_username = var.dockerhub_org
+  registry_password = var.dockerhub_password
 
   # API عبر IP الـ App Gateway (HTTP فقط)
   environment_variables = [
@@ -107,10 +111,10 @@ module "frontend_container_app" {
 module "backend_container_app" {
   source = "../modules/container_app"
 
-  name                  = "backend"
+  name                  = "backend-aloufi"
   container_apps_env_id = module.container_apps_env.id
   resource_group_name   = module.resource_group.name
-  container_image       = "docker.io/${var.dockerhub_org}/backend:${var.api_image_tag}"
+  container_image       = "docker.io/${var.dockerhub_org}/burgerbuilder-backend:${var.api_image_tag}"
   container_port        = 8080
   cpu_requests          = "0.5"
   memory_requests       = "1Gi"
@@ -121,7 +125,20 @@ module "backend_container_app" {
   ingress_enabled  = true
   ingress_external = true
 
+  # Docker registry authentication
+  registry_server   = "docker.io"
+  registry_username = var.dockerhub_org
+  registry_password = var.dockerhub_password
+
   environment_variables = [
+    {
+      name  = "SERVER_PORT"
+      value = "8080"
+    },
+    {
+      name  = "CORS_ALLOWED_ORIGINS"
+      value = "http://${module.app_gateway.public_ip_address}"
+    },
     {
       name  = "DB_HOST"
       value = module.sql.server_fqdn
@@ -140,7 +157,7 @@ module "backend_container_app" {
     },
     {
       name  = "DB_PASSWORD"
-      value = random_password.sql_admin_password.result
+      value = local.sql_admin_password
     },
     {
       name  = "DB_DRIVER"

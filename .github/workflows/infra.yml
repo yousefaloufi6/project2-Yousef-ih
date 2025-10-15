@@ -8,6 +8,7 @@ on:
     branches: [ main ]
     paths:
       - 'terraform/**'
+      - '.github/workflows/infra.yml'
   workflow_dispatch:
     inputs:
       action:
@@ -21,11 +22,8 @@ concurrency:
   group: terraform-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+# Note: Using Azure CLI authentication instead of Service Principal
+# Ensure you're logged in with: az login
 
 jobs:
   terraform-plan:
@@ -44,25 +42,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate required secrets
-        run: |
-          exit_code=0
-          [ -z "${{ secrets.AZURE_CLIENT_ID }}" ] && echo "::error::Missing AZURE_CLIENT_ID" && exit_code=1
-          [ -z "${{ secrets.AZURE_CLIENT_SECRET }}" ] && echo "::error::Missing AZURE_CLIENT_SECRET" && exit_code=1
-          [ -z "${{ secrets.AZURE_TENANT_ID }}" ] && echo "::error::Missing AZURE_TENANT_ID" && exit_code=1
-          [ -z "${{ secrets.AZURE_SUBSCRIPTION_ID }}" ] && echo "::error::Missing AZURE_SUBSCRIPTION_ID" && exit_code=1
-          exit $exit_code
-
       - name: Azure login
         uses: azure/login@v2
         with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-            }
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -160,13 +143,7 @@ jobs:
       - name: Azure login
         uses: azure/login@v2
         with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-            }
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -175,7 +152,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init -backend-config=../backend.hcl -reconfigure -input=false
+        run: terraform init -input=false
 
       - name: Auto-import existing resources if not in state
         continue-on-error: true
@@ -183,32 +160,35 @@ jobs:
           echo "Checking if resources need to be imported..."
           
           # Check if Container Apps Environment exists in Azure but not in state
-          if az containerapp env show --name yousef-aca-env-prod-v2 --resource-group Yousef-rg &>/dev/null; then
+          if az containerapp env show --name aloufiyousef-aca-env-prod --resource-group aloufiyousef-rg &>/dev/null; then
             echo "Container Apps Environment exists in Azure..."
             if ! terraform state show 'module.container_apps_env.azurerm_container_app_environment.main' &>/dev/null; then
               echo "Not in Terraform state - importing..."
+              SUB_ID=$(az account show --query id -o tsv)
               terraform import 'module.container_apps_env.azurerm_container_app_environment.main' \
-                "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/managedEnvironments/yousef-aca-env-prod-v2" || true
+                "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/managedEnvironments/aloufiyousef-aca-env-prod" || true
             else
               echo "Already in Terraform state - skipping"
             fi
           fi
           
           # Check if frontend Container App needs importing
-          if az containerapp show --name ca-frontend --resource-group Yousef-rg &>/dev/null; then
+          if az containerapp show --name ca-frontend-aloufi --resource-group aloufiyousef-rg &>/dev/null; then
             if ! terraform state show 'module.frontend_container_app.azurerm_container_app.main' &>/dev/null; then
               echo "Importing frontend container app..."
+              SUB_ID=$(az account show --query id -o tsv)
               terraform import 'module.frontend_container_app.azurerm_container_app.main' \
-                "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/containerApps/ca-frontend" || true
+                "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/containerApps/ca-frontend-aloufi" || true
             fi
           fi
           
           # Check if backend Container App needs importing
-          if az containerapp show --name ca-backend --resource-group Yousef-rg &>/dev/null; then
+          if az containerapp show --name ca-backend-aloufi --resource-group aloufiyousef-rg &>/dev/null; then
             if ! terraform state show 'module.backend_container_app.azurerm_container_app.main' &>/dev/null; then
               echo "Importing backend container app..."
+              SUB_ID=$(az account show --query id -o tsv)
               terraform import 'module.backend_container_app.azurerm_container_app.main' \
-                "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/Yousef-rg/providers/Microsoft.App/containerApps/ca-backend" || true
+                "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/containerApps/ca-backend-aloufi" || true
             fi
           fi
           
@@ -258,13 +238,7 @@ jobs:
       - name: Azure login
         uses: azure/login@v2
         with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-            }
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -273,7 +247,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init -backend-config=../backend.hcl -reconfigure -input=false
+        run: terraform init -input=false
 
       - name: Pre-destroy - Delete Container Apps first
         continue-on-error: true
@@ -283,10 +257,10 @@ jobs:
           
           # Delete Container Apps first
           echo "Deleting frontend container app..."
-          az containerapp delete --name ca-frontend --resource-group Yousef-rg --yes || true
+          az containerapp delete --name ca-frontend-aloufi --resource-group aloufiyousef-rg --yes || true
           
           echo "Deleting backend container app..."
-          az containerapp delete --name ca-backend --resource-group Yousef-rg --yes || true
+          az containerapp delete --name ca-backend-aloufi --resource-group aloufiyousef-rg --yes || true
           
           # Wait for apps to delete
           echo "Waiting 30 seconds for container apps to delete..."
@@ -294,9 +268,9 @@ jobs:
           
           # Delete ALL Container Apps Environments (this will clean up AKS resources)
           echo "Deleting ALL Container Apps Environments..."
-          for env_name in $(az containerapp env list --resource-group Yousef-rg --query "[].name" -o tsv); do
+          for env_name in $(az containerapp env list --resource-group aloufiyousef-rg --query "[].name" -o tsv); do
             echo "Deleting environment: $env_name"
-            az containerapp env delete --name "$env_name" --resource-group Yousef-rg --yes || true
+            az containerapp env delete --name "$env_name" --resource-group aloufiyousef-rg --yes || true
           done
           
           # Wait for environments to delete (this is critical!)
@@ -320,7 +294,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Cleaning up any remaining Container Apps resources..."
-          az containerapp delete --name ca-frontend --resource-group Yousef-rg --yes --no-wait || true
-          az containerapp delete --name ca-backend --resource-group Yousef-rg --yes --no-wait || true
-          az containerapp env delete --name yousef-aca-env-prod-v2 --resource-group Yousef-rg --yes --no-wait || true
+          az containerapp delete --name ca-frontend-aloufi --resource-group aloufiyousef-rg --yes --no-wait || true
+          az containerapp delete --name ca-backend-aloufi --resource-group aloufiyousef-rg --yes --no-wait || true
+          az containerapp env delete --name aloufiyousef-aca-env-prod --resource-group aloufiyousef-rg --yes --no-wait || true
           echo "Cleanup commands issued. Resources will be deleted in the background."

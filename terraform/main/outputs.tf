@@ -40,6 +40,6 @@ output "backend_container_app_fqdn" {
 
 output "sql_admin_password" {
   description = "SQL Server admin password"
-  value       = random_password.sql_admin_password.result
+  value       = local.sql_admin_password
   sensitive   = true
 }

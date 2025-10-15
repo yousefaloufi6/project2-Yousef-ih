@@ -22,7 +22,10 @@ terraform {
       version = "~> 2.0"
     }
   }
-  backend "azurerm" {}
+  
+  # Remote backend disabled for initial deployment
+  # Uncomment and configure when you have a storage account ready
+  # backend "azurerm" {}
 }
 
 provider "azurerm" {
@@ -35,4 +38,8 @@ provider "azurerm" {
       recover_soft_deleted_key_vaults = true
     }
   }
+  
+  # Force Azure CLI authentication only
+  use_cli = true
+  use_oidc = false
 }

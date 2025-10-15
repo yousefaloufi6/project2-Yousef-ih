@@ -85,3 +85,22 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "registry_server" {
+  description = "Docker registry server (e.g., docker.io)"
+  type        = string
+  default     = null
+}
+
+variable "registry_username" {
+  description = "Docker registry username"
+  type        = string
+  default     = null
+}
+
+variable "registry_password" {
+  description = "Docker registry password or access token"
+  type        = string
+  default     = null
+  sensitive   = true
+}

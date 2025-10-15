@@ -5,6 +5,25 @@ resource "azurerm_container_app" "main" {
   revision_mode                = "Single"
   tags                         = var.tags
 
+  # Docker Registry Configuration - only if password is provided
+  dynamic "registry" {
+    for_each = var.registry_password != null && var.registry_password != "" ? [1] : []
+    content {
+      server               = var.registry_server
+      username             = var.registry_username
+      password_secret_name = "registry-password"
+    }
+  }
+
+  # Secrets for registry password - only if password is provided
+  dynamic "secret" {
+    for_each = var.registry_password != null && var.registry_password != "" ? [1] : []
+    content {
+      name  = "registry-password"
+      value = var.registry_password
+    }
+  }
+
   template {
     min_replicas = var.min_replicas
     max_replicas = var.max_replicas

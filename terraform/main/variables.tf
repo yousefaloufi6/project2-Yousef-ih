@@ -102,8 +102,15 @@ variable "api_image_tag" {
   type        = string
 }
 
+variable "dockerhub_password" {
+  description = "Docker Hub password or access token"
+  type        = string
+  sensitive   = true
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
   default     = {}
 }
+
