@@ -154,53 +154,101 @@ jobs:
       - name: Auto-import existing resources if not in state
         continue-on-error: true
         run: |
-          echo "Checking if resources need to be imported..."
+          echo "=== Starting comprehensive resource import ==="
           
           SUB_ID=$(az account show --query id -o tsv)
+          RG="aloufiyousef-rg"
           
-          # Check if Resource Group exists
-          if az group show --name aloufiyousef-rg &>/dev/null; then
-            echo "Resource Group exists in Azure..."
-            if ! terraform state show 'module.resource_group.azurerm_resource_group.main' &>/dev/null; then
-              echo "Not in Terraform state - importing..."
-              terraform import 'module.resource_group.azurerm_resource_group.main' \
-                "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg" || true
+          # Function to import if not in state
+          import_if_missing() {
+            local tf_resource=$1
+            local azure_id=$2
+            local resource_name=$3
+            
+            if ! terraform state show "$tf_resource" &>/dev/null; then
+              echo "Importing $resource_name..."
+              terraform import "$tf_resource" "$azure_id" || true
             else
-              echo "Already in Terraform state - skipping"
+              echo "$resource_name already in state - skipping"
             fi
+          }
+          
+          # 1. Resource Group
+          import_if_missing \
+            'module.resource_group.azurerm_resource_group.main' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG" \
+            "Resource Group"
+          
+          # 2. Virtual Network
+          import_if_missing \
+            'module.network.azurerm_virtual_network.main' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/virtualNetworks/vnet-prod" \
+            "Virtual Network"
+          
+          # 3. Network Security Groups
+          import_if_missing \
+            'module.network.azurerm_network_security_group.agw' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/networkSecurityGroups/nsg-agw-prod" \
+            "AGW NSG"
+          
+          import_if_missing \
+            'module.network.azurerm_network_security_group.aca' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/networkSecurityGroups/nsg-aca-prod" \
+            "ACA NSG"
+          
+          # 4. Public IP
+          import_if_missing \
+            'module.app_gateway.azurerm_public_ip.agw' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/publicIPAddresses/pip-agw-aloufiyousef-burgerbuilder" \
+            "Application Gateway Public IP"
+          
+          # 5. Log Analytics Workspace
+          import_if_missing \
+            'module.log_analytics.azurerm_log_analytics_workspace.main' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.OperationalInsights/workspaces/law-aloufiyousef-burgerbuilder" \
+            "Log Analytics Workspace"
+          
+          # 6. SQL Server
+          import_if_missing \
+            'module.sql.azurerm_mssql_server.main' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Sql/servers/sql-aloufiyousef-burgerbuilder" \
+            "SQL Server"
+          
+          # 7. Private DNS Zones
+          import_if_missing \
+            'module.dns.azurerm_private_dns_zone.sql' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/privateDnsZones/privatelink.database.windows.net" \
+            "SQL Private DNS Zone"
+          
+          import_if_missing \
+            'module.dns.azurerm_private_dns_zone.container_apps' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/privateDnsZones/whitedesert-4d6c9740.westus2.azurecontainerapps.io" \
+            "Container Apps Private DNS Zone"
+          
+          # 8. Container Apps Environment
+          if az containerapp env show --name aloufiyousef-aca-env-prod --resource-group $RG &>/dev/null; then
+            import_if_missing \
+              'module.container_apps_env.azurerm_container_app_environment.main' \
+              "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.App/managedEnvironments/aloufiyousef-aca-env-prod" \
+              "Container Apps Environment"
           fi
           
-          # Check if Container Apps Environment exists in Azure but not in state
-          if az containerapp env show --name aloufiyousef-aca-env-prod --resource-group aloufiyousef-rg &>/dev/null; then
-            echo "Container Apps Environment exists in Azure..."
-            if ! terraform state show 'module.container_apps_env.azurerm_container_app_environment.main' &>/dev/null; then
-              echo "Not in Terraform state - importing..."
-              terraform import 'module.container_apps_env.azurerm_container_app_environment.main' \
-                "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/managedEnvironments/aloufiyousef-aca-env-prod" || true
-            else
-              echo "Already in Terraform state - skipping"
-            fi
+          # 9. Container Apps
+          if az containerapp show --name ca-frontend-aloufi --resource-group $RG &>/dev/null; then
+            import_if_missing \
+              'module.frontend_container_app.azurerm_container_app.main' \
+              "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.App/containerApps/ca-frontend-aloufi" \
+              "Frontend Container App"
           fi
           
-          # Check if frontend Container App needs importing
-          if az containerapp show --name ca-frontend-aloufi --resource-group aloufiyousef-rg &>/dev/null; then
-            if ! terraform state show 'module.frontend_container_app.azurerm_container_app.main' &>/dev/null; then
-              echo "Importing frontend container app..."
-              terraform import 'module.frontend_container_app.azurerm_container_app.main' \
-                "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/containerApps/ca-frontend-aloufi" || true
-            fi
+          if az containerapp show --name ca-backend-aloufi --resource-group $RG &>/dev/null; then
+            import_if_missing \
+              'module.backend_container_app.azurerm_container_app.main' \
+              "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.App/containerApps/ca-backend-aloufi" \
+              "Backend Container App"
           fi
           
-          # Check if backend Container App needs importing
-          if az containerapp show --name ca-backend-aloufi --resource-group aloufiyousef-rg &>/dev/null; then
-            if ! terraform state show 'module.backend_container_app.azurerm_container_app.main' &>/dev/null; then
-              echo "Importing backend container app..."
-              terraform import 'module.backend_container_app.azurerm_container_app.main' \
-                "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/containerApps/ca-backend-aloufi" || true
-            fi
-          fi
-          
-          echo "Import check complete!"
+          echo "=== Import check complete ==="
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
