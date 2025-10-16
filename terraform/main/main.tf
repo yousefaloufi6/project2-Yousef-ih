@@ -132,40 +132,40 @@ module "backend_container_app" {
 
   environment_variables = [
     {
-      name  = "SERVER_PORT"
-      value = "8080"
-    },
-    {
-      name  = "CORS_ALLOWED_ORIGINS"
-      value = "http://${module.app_gateway.public_ip_address}"
+      name  = "SPRING_PROFILES_ACTIVE"
+      value = "azure"
     },
     {
       name  = "DB_HOST"
-      value = module.sql.server_fqdn
-    },
-    {
-      name  = "DB_PORT"
-      value = "1433"
+      value = "sql-aloufiyousef-burgerbuilder.database.windows.net"
     },
     {
       name  = "DB_NAME"
-      value = var.sql_database_name
-    },
-    {
-      name  = "DB_USERNAME"
-      value = var.sql_admin_login
+      value = "burgerbuilderaloufi"
     },
     {
       name  = "DB_PASSWORD"
-      value = local.sql_admin_password
+      value = "P@ssword1234!"
     },
     {
       name  = "DB_DRIVER"
       value = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
     },
     {
-      name  = "SPRING_PROFILES_ACTIVE"
-      value = "azure"
+      name  = "DB_PORT"
+      value = "1433"
+    },
+    {
+      name  = "SERVER_PORT"
+      value = "8080"
+    },
+    {
+      name  = "CORS_ALLOWED_ORIGINS"
+      value = "http://4.197.160.254"
+    },
+    {
+      name  = "DB_USERNAME"
+      value = "sqladmin"
     }
   ]
 

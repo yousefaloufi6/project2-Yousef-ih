@@ -214,7 +214,34 @@ jobs:
             "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Sql/servers/sql-aloufiyousef-burgerbuilder" \
             "SQL Server"
           
-          # 7. Private DNS Zones
+          # 7. Subnets
+          import_if_missing \
+            'module.network.azurerm_subnet.agw' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/virtualNetworks/vnet-prod/subnets/subnet-agw" \
+            "Application Gateway Subnet"
+          
+          import_if_missing \
+            'module.network.azurerm_subnet.aca' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/virtualNetworks/vnet-prod/subnets/subnet-aca" \
+            "Container Apps Environment Subnet"
+          
+          import_if_missing \
+            'module.network.azurerm_subnet.aca_ca' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/virtualNetworks/vnet-prod/subnets/subnet-aca-ca" \
+            "Container Apps Subnet"
+          
+          import_if_missing \
+            'module.network.azurerm_subnet.pe' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/virtualNetworks/vnet-prod/subnets/subnet-pe" \
+            "Private Endpoint Subnet"
+          
+          # 8. SQL Database
+          import_if_missing \
+            'module.sql.azurerm_mssql_database.main' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Sql/servers/sql-aloufiyousef-burgerbuilder/databases/burgerbuilderaloufi" \
+            "SQL Database"
+          
+          # 9. Private DNS Zones
           import_if_missing \
             'module.dns.azurerm_private_dns_zone.sql' \
             "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/privateDnsZones/privatelink.database.windows.net" \
@@ -225,7 +252,18 @@ jobs:
             "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/privateDnsZones/whitedesert-4d6c9740.westus2.azurecontainerapps.io" \
             "Container Apps Private DNS Zone"
           
-          # 8. Container Apps Environment
+          # 10. Private DNS Zone Virtual Network Links
+          import_if_missing \
+            'module.dns.azurerm_private_dns_zone_virtual_network_link.sql' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/privateDnsZones/privatelink.database.windows.net/virtualNetworkLinks/sql-dns-link" \
+            "SQL DNS Zone VNet Link"
+          
+          import_if_missing \
+            'module.dns.azurerm_private_dns_zone_virtual_network_link.container_apps' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/privateDnsZones/whitedesert-4d6c9740.westus2.azurecontainerapps.io/virtualNetworkLinks/container-apps-dns-link" \
+            "Container Apps DNS Zone VNet Link"
+          
+          # 11. Container Apps Environment
           if az containerapp env show --name aloufiyousef-aca-env-prod --resource-group $RG &>/dev/null; then
             import_if_missing \
               'module.container_apps_env.azurerm_container_app_environment.main' \
@@ -233,7 +271,7 @@ jobs:
               "Container Apps Environment"
           fi
           
-          # 9. Container Apps
+          # 12. Container Apps
           if az containerapp show --name ca-frontend-aloufi --resource-group $RG &>/dev/null; then
             import_if_missing \
               'module.frontend_container_app.azurerm_container_app.main' \
