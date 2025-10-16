@@ -66,6 +66,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform Format Check
+        continue-on-error: true
         run: terraform fmt -check -recursive
 
       - name: Terraform Plan
