@@ -191,20 +191,8 @@ jobs:
           
           echo "Import check complete!"
 
-      - name: Download plan artifact
-        if: github.event_name == 'push'
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-          path: terraform/main
-
       - name: Terraform Apply
-        run: |
-          if [ -f tfplan.bin ]; then
-            terraform apply -auto-approve tfplan.bin
-          else
-            terraform apply -auto-approve
-          fi
+        run: terraform apply -auto-approve
 
       - name: Terraform Output
         run: terraform output -json > outputs.json
