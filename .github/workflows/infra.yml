@@ -263,15 +263,49 @@ jobs:
             "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/privateDnsZones/whitedesert-4d6c9740.westus2.azurecontainerapps.io/virtualNetworkLinks/container-apps-dns-link" \
             "Container Apps DNS Zone VNet Link"
           
-          # 11. Container Apps Environment
+          # 11. Application Gateway
+          import_if_missing \
+            'module.app_gateway.azurerm_application_gateway.main' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/applicationGateways/agw-aloufiyousef-burgerbuilder" \
+            "Application Gateway"
+          
+          # 12. Subnet NSG Associations
+          import_if_missing \
+            'module.network.azurerm_subnet_network_security_group_association.agw' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/virtualNetworks/vnet-prod/subnets/subnet-agw" \
+            "AGW Subnet NSG Association"
+          
+          import_if_missing \
+            'module.network.azurerm_subnet_network_security_group_association.aca' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/virtualNetworks/vnet-prod/subnets/subnet-aca" \
+            "ACA Subnet NSG Association"
+          
+          import_if_missing \
+            'module.network.azurerm_subnet_network_security_group_association.aca_ca' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/virtualNetworks/vnet-prod/subnets/subnet-aca-ca" \
+            "ACA CA Subnet NSG Association"
+          
+          # 13. Private Endpoint
+          import_if_missing \
+            'module.sql.azurerm_private_endpoint.sql' \
+            "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Network/privateEndpoints/pe-sql-aloufiyousef-burgerbuilder" \
+            "SQL Private Endpoint"
+          
+          # 14. Container Apps Environment
           if az containerapp env show --name aloufiyousef-aca-env-prod --resource-group $RG &>/dev/null; then
             import_if_missing \
               'module.container_apps_env.azurerm_container_app_environment.main' \
               "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.App/managedEnvironments/aloufiyousef-aca-env-prod" \
               "Container Apps Environment"
+            
+            # 15. Container Apps Environment Diagnostic Setting
+            import_if_missing \
+              'module.container_apps_env.azurerm_monitor_diagnostic_setting.aca_env' \
+              "/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.App/managedEnvironments/aloufiyousef-aca-env-prod|diag-aloufiyousef-aca-env-prod" \
+              "Container Apps Environment Diagnostics"
           fi
           
-          # 12. Container Apps
+          # 16. Container Apps
           if az containerapp show --name ca-frontend-aloufi --resource-group $RG &>/dev/null; then
             import_if_missing \
               'module.frontend_container_app.azurerm_container_app.main' \
