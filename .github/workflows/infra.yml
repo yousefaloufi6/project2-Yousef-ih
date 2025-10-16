@@ -156,12 +156,25 @@ jobs:
         run: |
           echo "Checking if resources need to be imported..."
           
+          SUB_ID=$(az account show --query id -o tsv)
+          
+          # Check if Resource Group exists
+          if az group show --name aloufiyousef-rg &>/dev/null; then
+            echo "Resource Group exists in Azure..."
+            if ! terraform state show 'module.resource_group.azurerm_resource_group.main' &>/dev/null; then
+              echo "Not in Terraform state - importing..."
+              terraform import 'module.resource_group.azurerm_resource_group.main' \
+                "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg" || true
+            else
+              echo "Already in Terraform state - skipping"
+            fi
+          fi
+          
           # Check if Container Apps Environment exists in Azure but not in state
           if az containerapp env show --name aloufiyousef-aca-env-prod --resource-group aloufiyousef-rg &>/dev/null; then
             echo "Container Apps Environment exists in Azure..."
             if ! terraform state show 'module.container_apps_env.azurerm_container_app_environment.main' &>/dev/null; then
               echo "Not in Terraform state - importing..."
-              SUB_ID=$(az account show --query id -o tsv)
               terraform import 'module.container_apps_env.azurerm_container_app_environment.main' \
                 "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/managedEnvironments/aloufiyousef-aca-env-prod" || true
             else
@@ -173,7 +186,6 @@ jobs:
           if az containerapp show --name ca-frontend-aloufi --resource-group aloufiyousef-rg &>/dev/null; then
             if ! terraform state show 'module.frontend_container_app.azurerm_container_app.main' &>/dev/null; then
               echo "Importing frontend container app..."
-              SUB_ID=$(az account show --query id -o tsv)
               terraform import 'module.frontend_container_app.azurerm_container_app.main' \
                 "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/containerApps/ca-frontend-aloufi" || true
             fi
@@ -183,7 +195,6 @@ jobs:
           if az containerapp show --name ca-backend-aloufi --resource-group aloufiyousef-rg &>/dev/null; then
             if ! terraform state show 'module.backend_container_app.azurerm_container_app.main' &>/dev/null; then
               echo "Importing backend container app..."
-              SUB_ID=$(az account show --query id -o tsv)
               terraform import 'module.backend_container_app.azurerm_container_app.main' \
                 "/subscriptions/$SUB_ID/resourceGroups/aloufiyousef-rg/providers/Microsoft.App/containerApps/ca-backend-aloufi" || true
             fi
